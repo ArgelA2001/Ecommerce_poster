@@ -1,0 +1,282 @@
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver import ActionChains
+import time
+from text_parser import grailed_age_list, grailed_key_list, ebay_category_list, grailed_condition_list, grailed_size_list, grailed_color_list, price_lists, category_list, general_description
+from Testing import image_list
+from Extract_info_from_excel import excel_total_titles
+from text_parser import grailed_age_list, grailed_key_list, poshmark_category_list, grailed_condition_list, posh_size_list, grailed_color_list, price_lists, category_list, general_description
+from Testing import image_list
+from Extract_info_from_excel import excel_total_titles
+#this import above gives me access to info from text_parser
+#muse use and identify where imports are neede
+
+chrome_options = Options()
+chrome_options.add_experimental_option("detach", True)
+
+
+driver = webdriver.Chrome("D:\\Selenium_python2\\chromedriver.exe", chrome_options=chrome_options)
+driver.get("https://www.ebay.com/sl/prelist/suggest?sr=shstart")
+# driver.maximize_window()
+time.sleep(2)
+
+count = 0
+pstart = count * 4
+def adding_pics():
+    global pstart
+    time.sleep(1)
+    driver.find_element('xpath', '//*[@id="fehelix-uploader"]').send_keys("D:\\Selenium_python2\\pics\\" + str(image_list[pstart]))
+    pstart += 1
+    driver.find_element('xpath', '//*[@id="fehelix-uploader"]').send_keys("D:\\Selenium_python2\\pics\\" + str(image_list[pstart]))
+    pstart += 1
+    driver.find_element('xpath', '//*[@id="fehelix-uploader"]').send_keys("D:\\Selenium_python2\\pics\\" + str(image_list[pstart]))
+    pstart += 1
+    driver.find_element('xpath', '//*[@id="fehelix-uploader"]').send_keys("D:\\Selenium_python2\\pics\\" + str(image_list[pstart]))
+    pstart += 1
+    
+
+def copy_listing(total_listings):
+    #click the checkmark on the left
+    time.sleep(3)
+    driver.find_element('xpath', '//*[@id="draft-checkbox-3376830290001"]').click()
+    time.sleep(1)
+
+    #click copy listing button
+    driver.find_element('xpath', '//*[@id="app-bling"]/div/div[2]/div[4]/div[1]/button[1]').click()
+
+    #add number of listings
+    driver.find_element('xpath', '//*[@id="s0-1-0-14-3-8-4-1-0-0-14-2-9-1-0-textbox"]').send_keys(total_listings)
+
+    #press copy
+    # driver.find_element('xpath', '//*[@id="app-bling"]/div/div[2]/div[4]/div[1]/div[1]/div[2]/div[4]/button[2]').click()
+
+def picking_condition(cond):
+    if cond == 'New':
+        driver.find_element('xpath', '//*[@id="s0-1-0-24-9-@prelist-radix-body-0-0-1-0-14-5-1-6-condition-1000"]').click()
+    elif cond == 'Used':
+        driver.find_element('xpath', '//*[@id="s0-1-0-24-9-@prelist-radix-body-0-0-1-0-14-5-1-6-condition-3000"]').click()
+    driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[1]/div[1]/div/div[2]/div[3]/div/div/div[2]/button').click()
+
+def start_up():
+    #20 seconds is to fill in human verifier if needed
+    time.sleep(15)
+    driver.find_element('xpath', '//*[@id="userid"]').send_keys('ararr_92')
+    time.sleep(2)
+    driver.find_element('xpath', '//*[@id="signin-continue-btn"]').click()
+    time.sleep(2)
+    driver.find_element('xpath', '//*[@id="pass"]').send_keys('who knows') 
+    driver.find_element('xpath', '//*[@id="sgnBt"]').click()
+    time.sleep(3)
+
+def checking_all_match():
+    if len(excel_total_titles) == len(ebay_category_list) and len(grailed_key_list) and len(grailed_condition_list) and len(grailed_size_list) and len(price_lists):
+        print('This shit all good')
+        print(len(excel_total_titles))
+        print('this the max count')
+
+    else:
+        print('Fix your shit')
+        print('grailed_category_list ' + str(len(ebay_category_list)))
+        print('grailed_key_list ' + str(len(grailed_key_list)))
+        print('grailed_condition_list ' + str(len(grailed_condition_list)))
+        print('posh size list ' + str(len(grailed_size_list)))
+        print('price_lists ' + str(len(price_lists)))
+        print('excel total titles ' + str(len(excel_total_titles)))
+
+def checking(counting):
+    print('checking function')
+    print(excel_total_titles[counting])
+    print(ebay_category_list[counting])
+    print(grailed_key_list[counting])
+    print(grailed_condition_list[counting])
+    print(grailed_size_list[counting])
+    print(price_lists[counting])
+    print(grailed_age_list[counting])
+    print('   ')
+
+
+def ebay_poster():
+    global count
+    print("Starting Ebay Poster")   
+
+    for title in excel_total_titles: 
+        print(title)
+        print(count)
+        time.sleep(2)
+
+        #adding title excel_total_titles[count]
+        print('adding title', str(count))
+        driver.find_element('xpath', '//*[@id="s0-1-0-24-6-@keyword-@box-@input-textbox"]').send_keys(title)
+        driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[1]/button').click()
+
+        time.sleep(15)
+        try:
+            driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[2]/button').click()
+
+        except:
+            driver.find_element('xpath','//*[@id="mainContent"]/div/div/div[2]/div[1]/div[2]/div/div/div[2]/div[3]/div/div/div/div/div[2]/div/div[2]/div[2]/button/span/span/span').click()
+            time.sleep(4)
+            driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[2]/button').click()
+
+        time.sleep(5)
+
+        picking_condition('Used')
+        start_up()
+
+        #picking regular category
+        driver.find_element('xpath' ,'//*[@id="mainContent"]/div/div/div[1]/div[2]/div[5]/div[2]/div/div/div[1]/fieldset[2]/div/div[2]/button[1]').click()
+        
+        print('add pics')
+        adding_pics()
+        # print('continue without match')
+        # #clicking continue without match
+        # continue_without_match = driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[2]/button')
+        # driver.execute_script("arguments[0].scrollIntoView(true)",continue_without_match)
+        # driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[2]/button').click()
+
+        # #selecting condition
+        # if grailed_condition_list[count] == 'New/Never Worn':
+        #     driver.find_element('xpath', '//*[@id="s0-1-0-24-9-@prelist-radix-body-0-0-1-0-14-5-1-6-condition-1000"]').click()
+        # else:
+        #     driver.find_element('xpath', '//*[@id="s0-1-0-24-9-@prelist-radix-body-0-0-1-0-14-5-1-6-condition-3000"]').click()
+        # driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[1]/div[1]/div/div[2]/div[3]/div/div/div[2]/button').click()
+        # time.sleep(3)
+
+        # clicking general description template
+
+        # driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[1]/div[1]/div/div[2]/div[3]/div/div/div[2]/button').click()
+        # time.sleep(1) 
+        
+        
+        time.sleep(4)
+        #general description
+        description = driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[1]/div[2]/div[8]/div[3]')
+        driver.execute_script("arguments[0].scrollIntoView(true)",description)
+        # driver.find_element('xpath' ,'//*[@id="s0-0-0-24-7-23[11]-0-28-15-rawEditor"]').send_keys(general_description)
+        time.sleep(2)
+        print('scrolled into description')
+        
+        driver.find_element('id' ,'s0-0-0-24-7-23[11]-0-28-15-rawEditor').send_keys(general_description)
+        # try:
+        #     driver.find_element('xpath', '//*[@id="nid-eme-31"]/ul').click()
+        #     print('1 worked')
+        # except:
+        #     driver.find_element('xpath' ,'//*[@id="nid-eme-31"]/ul/li[1]').click()
+        #     print('2 worked')
+        # a = ActionChains(driver)
+        # m = driver.find_element('xpath' ,'//*[@id="nid-dh0-89"]/ul/li[4]/a')
+        # #hover over element
+        # a.move_to_element(m).perform()
+        # time.sleep(1)
+        # #identify sub element
+        # n = driver.find_element('xpath', '//*[@id="nid-dh0-89"]/ul/li[4]/ul/li[1]/a')
+        # a.move_to_element(n).click().perform()
+        # print('hover complete')
+        time.sleep(4)
+        print('description complete')
+        # #inserting price
+        driver.find_element('xpath', '//*[@id="s0-0-0-24-7-23[13]-0-28-1-9-2-1-se-textbox"]').send_keys(price_lists[count])
+
+        scroll_down_price = driver.find_element('xpath', '//*[@id="s0-0-0-24-7-23[13]-0-28-1-16-5-se-textbox"]')
+        driver.execute_script("arguments[0].scrollIntoView(true)",scroll_down_price)
+
+        # time.sleep(1)
+        
+        # # #shipping format
+        # driver.find_element('xpath', '//*[@id="nid-ms1-25"]/button/span[1]').click()
+
+
+        scroll_down_to_list = driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[1]/div[2]/div[14]/button[1]')
+        driver.execute_script("arguments[0].scrollIntoView(true)",scroll_down_to_list)
+
+
+
+        
+        time.sleep(2)
+        #to activate calculated shipping
+        # driver.find_element('xpath', '//*[@id="s0-0-0-24-7-23[15]-0-28-20-11-3-0-35-2-label"]').click()s
+
+        # driver.find_element('xpath', '//*[@id="nid-gfi-28"]/button').click()
+        # driver.find_element('xpath', '//*[@id="s0-0-0-24-7-23[15]-0-20-6-0-35-4-15-13[0]-se-switch"]').click()
+        # driver.find_element('xpath','//*[@id="s0-0-0-24-7-23[15]-0-28-20-19[0]-20-se-textbox"]').send_keys('5')
+
+        # driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[1]/div[2]/div[11]/div[1]/div/button').click()
+        # driver.find_element('xpath' ,'//*[@id="dialog-sidepane"]/div[2]/div[3]/div/div[2]/div[3]/div[3]/button').click()
+
+        time.sleep(1)
+        #turn off returns
+        driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[1]/div[2]/div[11]/div[1]/div/button').click()
+        driver.find_element('xpath', '//*[@id="dialog-sidepane"]/div[2]/div[3]/div/div[2]/div[3]/div[3]/button/div/div[2]').click()
+        driver.find_element('xpath', '//*[@id="s0-0-0-24-7-10-1-0-9-2-5-0-0-10-24-1-0-16-8-2-returnPolicy-ReturnsNotAccepted"]').click()
+        driver.find_element('xpath' ,'//*[@id="dialog-sidepane"]/div[2]/div[3]/div/div[1]/div[2]/button').click()
+
+        
+        time.sleep(5)
+        # #list it button
+        driver.find_element('xpath', '//*[@id="mainContent"]/div/div/div[1]/div[2]/div[14]/button[1]').click()
+        time.sleep(10)
+
+
+
+                # need to test this out officially
+                # this should be everything that is needed though.  Just need to iterate and add the right arguments.
+
+
+
+                #     #typing in men to narrow search category
+                #     driver.find_element('xpath', '//*[@id="s0-1-0-14-3-14-1-0-0-14-2-6-1-0-5-10-14-@input-textbox"]').send_keys('mens clothing')
+                #     time.sleep(2)
+                #     #this is for mens t shirts
+                    
+                #     if ebay_category_list[count] == 'Jacket':
+                #         driver.find_element('xpath', '//*[@id="s0-1-0-14-3-14-1-0-0-14-2-6-1-0-5-10-18-categoryId-57988"]').click()
+                #     elif ebay_category_list[count] == 'TShirt':
+                #         driver.find_element('xpath', '//*[@id="s0-1-0-14-3-14-1-0-0-14-2-6-1-0-5-10-18-categoryId-15687"]').click()
+                #     elif ebay_category_list[count] == 'Sweatshirts and Hoodies':
+                #         driver.find_element('xpath', '//*[@id="s0-1-0-14-3-14-1-0-0-14-2-6-1-0-5-10-18-categoryId-155183"]').click()
+                #     elif ebay_category_list[count] == 'Sweaters':
+                #         driver.find_element('xpath', '//*[@id="s0-1-0-14-3-14-1-0-0-14-2-6-1-0-5-10-18-categoryId-155183"]').click()
+                    
+                #     time.sleep(3)
+                #     #always messes up here on the second time
+                #     driver.find_element('xpath', '//*[@id="app-bling"]/div/div[3]/div[3]/div[1]/div[2]/div[4]/div/button').click()
+
+                #     time.sleep(1)
+
+                #     print('adding price', str(count))
+                #     #adding price
+                #     try:
+                #         driver.find_element('xpath', '//*[@id="s0-1-0-14-3-9-0-11[9[0]]-1-0-2-0-textbox"]').clear()
+                #         time.sleep(1)
+                        
+                #         print('clear price')
+                #     except:
+                #         print('error with price')
+                #         # driver.find_element('xpath', '//*[@id="s0-1-0-14-3-9-0-11[9[0]]-1-0-2-0-textbox"]').send_keys(price_lists[count])
+                #     time.sleep(1)
+                    
+                #     #add item condition
+                    
+                #     driver.find_element('xpath', '//*[@id="app-bling"]/div/div[3]/div[3]/div[1]/div[2]/div[4]/div/button').click()
+
+    # time.sleep(1)
+
+    # print(' onto item_specifics') 
+    # #item specifics//*[@id="app-bling"]/div/div[2]/div[5]/table/tbody/tr[1]/td[11]/span/span//*[@id="app-bling"]/div/div[2]/div[5]/table/tbody/tr[1]/td[11]/span
+    
+    # count += 1
+    # print('finish listing #' + str(count))
+    
+ 
+
+
+ebay_poster()
+
+
+# print(excel_total_titles[count])
+# print(price_lists[count])
+# print(grailed_size_list[count])
