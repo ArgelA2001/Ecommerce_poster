@@ -1,0 +1,183 @@
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+import time
+import requests
+from bs4 import BeautifulSoup
+from selenium.common.exceptions import NoSuchElementException
+import codecs
+
+# specify the URL you want to scrape
+url = 'https://www.depop.com/_realvintage/'
+# results = requests.get(url)
+
+chrome_options = Options()
+chrome_options.add_experimental_option("detach", True)
+driver = webdriver.Chrome("D:\\Selenium_python2\\chromedriver.exe", chrome_options=chrome_options)
+# driver.maximize_window()
+
+#game plan for this
+# scroll down till encounters first sold listing //// 
+# then stop scrolling //// 
+# count all unsold listings, maybe count all elements until you get to 
+# the total title number, then parse them all,
+scroll_down = driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+total_titles = 0
+ovr_listings = 0
+def getting_each_title():
+    global total_titles
+    global ovr_listings
+    item_count = 1
+    driver.find_element("xpath", '//*[@id="products-tab"]/div/ul/li[' + str(item_count) + ']/div/a/div').click()
+    
+    print('yuh')
+    
+    # while True:
+    #     try:
+    #         sold_product = driver.find_element('css selector', "[data-testid='product__sold']")
+    #         sold_product
+    #         print('sold listing')
+    #         break
+    #     except NoSuchElementException:
+    #         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    #         total_titles += 1
+    listings = driver.find_elements('css selector', "[data-testid='product__item']")
+    for listing in listings:
+        # listing.click()
+        # time.sleep(4)
+        title_parsing()
+        ovr_listings += 1
+    print('ovr listings')
+    print(ovr_listings)
+        
+
+
+
+all_titles = []
+def hashtag_parser(word):
+    global overall_title
+    ind_title = []
+    time.sleep(2)
+    for letter in word:
+        if letter != '#' or ',':
+            ind_title.append(letter)
+        else:
+            overall_title = ''.join(ind_title)
+            print(overall_title)
+        
+       
+            if overall_title not in all_titles:
+                all_titles.append(overall_title)
+            break
+
+def title_parsing():
+    global ovr_listings
+    print('start title parsing')
+    
+    item_count = 1
+    for i in range(830):#ovr_listings #' + str(item_count) + ' 
+        driver.find_element("xpath", '//*[@id="products-tab"]/div/ul/li[' + str(item_count) + ' ]').click()
+        print(item_count)
+        time.sleep(1)
+
+        current_url = driver.current_url
+        response = requests.get(current_url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # title
+        description_meta_tag = soup.find("meta", {"name": "description"})
+        description = description_meta_tag['content']
+        hashtag_parser(description)
+
+        time.sleep(1)
+        #price
+        # try:
+        #     print('1')
+        #     td_element = driver.find_element("class name", "TableCell-sc-__sc-12y8so1-0 bWenjz")
+        #     price = td_element.text
+        #     print(price)
+            
+        # except:
+        print('2222')
+        td_element = soup.find("td", {"class": "TableCell-sc-__sc-12y8so1-0 bWenjz"})
+        price = td_element.text
+        print(price)
+
+        #size
+        item_size = driver.find_element('xpath', '//*[@id="main"]/div[1]/div[3]/div/div[1]/div/table/tbody/tr[1]/td')
+        print(item_size.text)
+
+        #colour 
+        item_colour = driver.find_element('xpath', '//*[@id="main"]/div[1]/div[3]/div/div[1]/div/table/tbody/tr[4]/td')
+        print(item_colour.text)
+
+        # category
+        category = driver.find_element('xpath', '//*[@id="main"]/div[5]/div/ol/li[4]/a/span')
+        print(category.text)
+
+        driver.back()
+        time.sleep(6)
+        item_count += 1
+    print('end title parsing')
+
+
+
+driver.get(url)
+# time.sleep(1)
+
+driver.find_element('xpath', '//*[@id="__next"]/div/div[2]/div[2]/button[2]').click()
+
+time.sleep(1.5)
+
+getting_each_title()
+# checking_shadow_dom()
+# title_parsing()
+# print(all_titles)
+# print('inner html')
+# extracting_html()
+# print(total_titles)
+
+
+
+# now just need a selenium auto scraper to  go through every single post, save the title to a list, compared the titles to each list, 
+# maybe create a zipped file with enumeration as well to easily identify it easier, like in sql, title could be unique id
+# actually enumaration might not be needed, since titles will just be compared
+#can make a database, maybe using sql, to compared all listings from all platforms,
+# if its sold on one platform, must be sold on all, so that would be good to like check it every day and if it is sold on one,
+# runs program to list it as sold on other platforms.
+
+
+    # i = 0
+    # while i <= 829:
+        
+    #     for element in elements:
+    #         total_titles += 1
+    #     time.sleep(1)
+    #     if scroll_down:
+    #         scroll_down
+        # 
+        #     scroll_down
+        #     time.sleep(.8)
+        #     i += 1
+        #     print(i)
+    
+    #     try:
+    #         
+    #         total_titles += 1
+    #         print(total_titles)
+    #         print('sold product product that is sold')
+    #     except NoSuchElementException:
+    #         print('not sold')
+    #         total_titles += 1
+    #         print(total_titles)
+            
+            
+        # else:
+        #     print('sold product product that is sold')
+        #     element.click()
+        
+    # driver.find_element('css selector', "[data-testid='product__item']").click()    
+    # elements = driver.find_elements('class name', 'styles__ProductCardContainer-sc-__sc-13q41bc-9 zqoPX')
+
