@@ -1,0 +1,751 @@
+from json import tool
+from multiprocessing.util import ForkAwareThreadLock
+from platform import platform
+from sqlite3 import complete_statement
+from ssl import OP_NO_COMPRESSION
+import this
+from timeit import repeat
+from tkinter import W
+from tkinter.colorchooser import Chooser
+from typing import OrderedDict
+from zipapp import create_archive
+import nltk
+import re
+import pandas as pd
+import json
+from googleapiclient.discovery import build
+from google.oauth2 import service_account
+from Extract_info_from_excel import excel_total_titles
+
+#study how stores stand out, what makes people compelled to shop at this store rather than the other, 
+#returning customers and reward points
+# path = '/Users/Argel Arroyo/Desktop/Selenium_python/depop-bulk-lister.json'
+# gc = pygsheets.authorize(service_file=path)
+# sheet_title = "1CmQ2IPQ1VIfkIbA_iEk7bPcSYgiBRrJYiKlfietOZ88" 
+# testing =  ['Nike ACG blue thin quarter zip Medium sweater active 30', 'Macalester College 2010 Sweatshirt Grey Vintage Reverse Weave Champion XL 30', 'Protect your nuts large hoodie puff print 30']
+
+global size_of_item
+excel_titles_strip = []
+for titles in excel_total_titles:
+    tstrip = titles.strip()
+    excel_titles_strip.append(tstrip)
+
+#excel_titles_strip['Vintage Christmas Sweatshirt Oneita Large 90\'s White 25', 'Vintage Christmas Sweatshirt Oneita Large 90\'s White 25']
+total_titles = ['Dakota Grizely Flannel red Large 25', 'MLB David Ortiz Majestic Jersey Boston Red Sox size XL 50', 
+                'MLB Giants Baseball shirt missing tag 96 Flaw size XL 45', 'Stone Cold Steeve Austin Large V neck WWE 65', 
+                'University of Kentucky reversible Blue Black Jacket XL 45', 'NIKE ACG active vest Large 30 ']
+titles = excel_total_titles
+lower_list = []
+titles_and_brands = []
+titles_no_brands = []
+testing_lower = []
+
+general_description = "PLEASE READ CAREFULLY!! Some items may have unlisted markings, but for the most part all marking would be listed. These clothes are often old and used, so tend to not be in pristine condition. Most items that are listed here will by default be used, unless stated otherwise. Items have not been washed so we also highly recommend that you wash before putting it on.  All items have been handpicked by us. Thank you for choosing to support us at RealVintage._ and if there is anything we can do to make your experience better feel free to send us a message! We also give large discounts if purchasing stuff in bulk."
+
+updated_title_list_lower = ['49er logo 7 xl vintage 35', "80's snowbird shirt large", '2003 korn deadstock take a look in the mirror 25 xl and xxl', '2003 nascar chase tony stewart home depot large 20', '2005 white sox world champions xl distressed 35', '2006 diabetes l', '2006 men frozen four hockey college xl', '2006 wisconsin hockey xl', '2008 nascar chase camo earnhardt shirt xl', '2009 pantera deadstock l 25', '2016 championship cubs m world series mlb', 'acme wiley coyote 2xl', 'adidas nutrition facts l', 'adidas rose bowl football m', 'adventure time l', 'adventure time large', 'aerosmith 2002 deadstock medium 25', 'alice cooper 2009 tour ds xl 25', 'american mickey l vintage', 'art shirt one size fits all xl', 'artistic lion m', 'aztec l', 'back to the future retro large', 'basketball tournament xl', 'bass pro shop medium', 'bead necklace shirt l w/ krewe of cheeseheads', 'bellspout racing m nascar', 'big dog large embroidered', 'black label society xl deadstock 25 ', 'blue nike shirt large', 'bob ross 2xl', 'bob ross 2xl piece', 'boba fett xl 2010', 'boilers purdue logo athletic m', 'bon jovi because we can tour 2013 xl', 'boyz n the hood 4x', 'breaking bank large', 'buck hunting l made in usa single stitch', 'bucket of blood s', 'chi chi get the yayo xl', 'chicago cubs lee sports xl w/ stainage', 'clemson medium college shirt', 'cloud 9 tiger xl', 'columbia green l', 'coors light 2xl slight paint stainage on front', 'dale earnhart jr 2006 nascar 2xl boxy fit', 'dale jr green xl', 'danzig legacy 2011 deadstock xl 25', 'darth tater xl', 'daytona usaa racing xl', 'disney magic kingdom medium', 'disney mickey bowlorama xl', 'disturbed 2006 tour 2xl deadstock', 'dodgers l', 'donald duck disney nyc xl', 'dragon racing fuel m', 'drink moxie 2xl', 'dylan mccarthy racing m', 'effortless m', 'fast and furious retro medium', 'fight or die xl', 'fnaf pizza cartoon large', 'full throttle biker bar medium', 'full throttle m', 'future forward xl shirt', 'g3 sports 2xl boston bruins', 'geek squad xl', 'geometrical tree large', 'glamis sand dune l shirt', 'gm card shirt xl', 'green day m 2009', 'griswold christmad red xl', 'guess green large stripe', 'guns n roses 2009 super slim long fit 2x 25', 'hard rock cafe brown 2xl', 'hard rock canada', 'harley punta cana xl tank top', 'holley ls fest small 2018', 'honor the firekeepers xl vintage sleeveles w/ stain', 'horseradish festival shirt m', 'i came i sawed i fixed xxl vintage', 'i triple dog dare you xl a christmas story', 'its safe to talk about my safety wisconsin medium vintage', 'jack daniels xl', 'jansport mediun fly gear', 'jimmie johnson winner circle xl and xxl', 'jimmy buffet 2007 medium', 'jimmy johnsons xl 48', 'jordan xxl red tree', 'junior leader yellow eagle xl', 'kaleb racing medium shirt', 'kenseth 2x', 'kobe bryant muppet l', 'korea vet 2xl', 'korn 2xl deadstock graffiti shirt y2k 25', 'korn 2009 bitch we have a problem tour 2x deadstock 30', 'korn madcatt bundle 3x 2x', 'kyke busch joe gibbs racing nascar 2xl 10', 'lawrence university xl shirt', "led zeppelin 2000's ds small 25", 'led zeppelin retro l', 'lime green pepsi shirt m', 'maddcatt xxxl martial arts shirts', 'matt kenseth nascar 2xl', 'mb baseball xl', 'mbna baseball xl', 'michelin bike racing xl', 'millennium falcon large retro old navy star wars tour shirt large', 'miller lite large', 'monopoly make it rain m', 'mossy oak xl', 'mountain medium with flaw', 'mustang m sonoma', 'nascar 2006 carl edwards xxl', 'nascar 2007 daytona triple header 3xl', 'nascar bubba wallace petty racing l', 'nascar jimmy johnson 2x 13', 'nascar junkie m winner circle', 'nascar winner circle xl johnson 48', 'new york donald duck xl', 'nickelodeon l', 'nike 1-72 2xl', 'nike blue xl', 'nike youth xl mens small', 'nile river medium', 'nissan 350z l', 'nonpoint band giant tag xl ds 25', 'nuno bettencourt band shirt size medium front and back 30', 'ohio state buckeyes xl', 'oktoberfest m', 'one piece straw hat crew m', 'oregon state football xxl nike #21', 'packers liquid blue style large 12', 'packers logo 7 xl 10', 'packers nfc nfl xl', 'peace love beaver shirt l', 'pink floyd dark side of moon l 2013 25', 'pirates of the caribbean medium disney 40', 'planet hollywood small 1991', 'primal scream deadstock xl', 'puddle of mudd m xl #1 30 ', 'puerto vallarta large', 'quicksilver xl', 'racing jimy owens l', 'realtree duck hunting shirt xl', 'rob zombie 2006 xl ds 30', 'rob zombie 2012 xl ds 30', 'rob zombie live deadstock xl 30', 'rock paper scissor large', 'rose bowl wisconsine embroidery 2000 xl', 'sandlot l', 'schrader small racing shirt', 'scorpions large deadstock humanity hour  20', 'seattle summit m', 'sepultra large band shirt 90', 'sf giants construction shirt xl', 'shoe box xl russel', 'shut up and fly xl', 'sky coaster xl', 'solid rock no limit festival shirt large', 'sp tennis medium', 'stanford russel m college shirt', 'star wars large retro very very thin and longer fit sleepshirt', 'star wars own every moment xl', 'stones 2019', 'summit lambdas 2001 m vintage', 'super bowl xlv packers shirt 2xl', 'switchfoot deadstock t shirt medium 25', 'syracuse medium orange', 'talladega speedway nascar 3xl', 'tampa bat bucs logo athletic xl 10 ', 'team sylvanua #48 racing l', 'the beatles abbey road large retro', 'the idiots believe large', 'the office xl', 'the office xl thin material', 'the shoe box black earth xl russel', 'to infinity and beyond l', 'toe jones xl vintage band', 'tony stewart xxl nascar shirt bass pro shop', 'trans siberan orchestra 2xl', 'university of notre dame small champion', 'vintage champion cornell medium', 'walker weasel l', 'walking dead xl', 'washington dc xl embroidery', 'whos the master shonuff? 2xl', 'winchester ammunition xl', 'wisconsin basketball championship xl badger', 'wisconsin ginseng festival l', 'wisconsin russell college l', 'wisconsine cornhuskers xl fired up', 'wisonain badgers shir xl', 'yale xl college shirt', 'yankees center swoosh xl', 'yellowstone m', 'zimmerman xl mlb', 'zz top xl club tacos 2006 w/ stainage']
+brandss = {
+    'disney items':['goofy', 'mickey', 'duck', 'disney', 'star', 'boba fett'],
+    'nfl brand':['nfl', 'raider', 'raiders', 'packers', 'lions', 'saints', 'cardinals', 'chargers', 'bucs', 'buccanears', 'browns', 'cowboys', '49er', 'ravens', 'broncos', 'seahawk', 'seahawks', 'panthers', 'jets', 'colts', 'falcons', 'jaguars', 'jags', 'chiefs', 'bills', 'eagles', 'rams', 'titans', 'bengals', 'steelers', 'dolphins', 'patriots', 'vikings', 'commanders', 'redskins'],
+    'nhlitem': ['nhl'],
+    'nba brand':['nba', 'kobe', 'lebron', 'kd', '76ers', 'hawks', 'bucks', 'bulls', 'cavaliers', 'celtics', 'clippers', 'grizzlies', 'heat', 'hornets', 'jazz', 'kings', 'knicks', 'lakers', 'magic', 'mavericks', 'nets', 'nuggets', 'pacers', 'pelicans', 'pistons', 'raptors', 'rockets', 'spurs', 'suns', 'thunder', 'timberwolves', 'trailblazers', 'warriors', 'wizards'],
+    'harley':['harley', 'davidson'],
+    'champion': ['champion'],
+    'chase authentics':['intimidator', 'nascar', 'racing', 'busch', 'matt', 'nascar', 'tony', 'dale', 'jimmy', 'johnson', 'jimmie', 'fireball roberts', 'carl long', 'fred lorenzen', 'david reutimann', 'richard childress', 'ned jarrett', 'kyle petty', 'ricky rudd', 'adam petty', 'joe weatherly', 'donnie allison', 'dave marcis', 'tim richmond', 'bobby labonte', 'ricky craven', 'kyle busch', 'geoff bodine', 'bobby allison', 'joey logano', 'junior johnson', 'todd bodine', 'kenny wallace', 'carl edwards', 'denny hamlin', 'jamie mcmurray', 'benny parsons', 'kevin harvick', 'lee petty', 'jeff burton', 'david pearson', 'kurt busch', 'kenseth', 'terry labonte', 'michael waltrip', 'kasey kahne', 'earnhardt', 'cale yarborough', 'alan kulwicki', 'tony stewart', 'jimmie johnson', 'rusty wallace', 'darrell waltrip', 'davey allison', 'dale jarrett', 'mark martin', 'jeff gordon', 'bill elliott', 'dale earnhardt', 'richard petty'],
+    'looney tunes':['acme', 'tweety', 'looney tunes', 'taz', 'sylvester'],
+    'mlb':['mlb', 'angels', 'astros', 'athletics', 'jays', 'braves', 'brewers', 'cardinals', 'cubs', 'yankees', 'diamondbacks', 'dodgers', 'giants', 'guardians', 'mariners', 'marlins', 'mets', 'nationals', 'orioles', 'padres', 'phillies', 'pirates', 'rangers', 'rays', 'sox', 'reds', 'rockies', 'royals', 'tigers', 'twins', 'sox', 'yankees'],
+    'nike':['nike', 'nik', 'acg', 'nike '],
+    'reebok':['reebok', 'reeboks'],
+    'russell':['russell', 'russel'],
+    'new era':['new era', 'era'],
+    'adidas':['adidas', 'adida'],
+    'jordan':['jordan', 'jordans', 'jorda'],
+    'looney tunes':['taz', 'tweety', 'sylvester', 'looney', 'looney tunes'],
+    'tommy hilfiger':['tommy', 'hilfiger', 'hilfigher'],
+    'marvel':['marvel', 'spiderman', 'spider-man', 'captain america', 'thor', 'iron man', 'iron-man', 'deadpool', 'marvel'],
+    'columbia':['columbia', 'columbi'],
+    'starteritem':['starter', 'starters'],
+    'patagoniaitem':['pata', 'patagonia'],
+    'hard rock cafeitem': ['hard rock', 'hard rock cafe', 'rock cafe'],
+    'wweitem': ['stone cold', 'wwe'],
+    'vintageitem': ['vintage'],
+    'pro player': ['pro player'],
+    'liquid blue': ['liquid blue'],
+    'themountainitem': ['mountain'],
+    'northface': ['the north face'],
+    'JNCOitem': ['jnco'],
+    'russelitem': ['russell', 'russel'],
+    'jerzeesitem': ['jerzees'],
+    'truereligion': ['true religion', 'religion']
+    }
+
+sizes = {
+    '4XL' :['4x', '4xl', 'xxxxl'], 
+    '3XL' :['xxxl', '3xl', '3x'], 
+    '2XL' :['2x', 'xxl', '2xl'], 
+    'XL' :['xl'], 
+    'LARGE' :['large', 'l'],
+    'MEDIUM' :['medi', 'medium', 'mediun'], 
+    'SMALL' :['small', 'smal'],
+}
+colors = {
+    'color': ['black', 'blue', 'brown', 'burgundy', 'cream', 'gold', 'green', 'grey', 'khaki', 'multi', 'navy', 'orange', 'pink', 'purple', 'red', 'silver', 'tan', 'white', 'yellow']
+}
+
+# sub_category = {
+#     # for posmark really
+# }
+category = {
+    #category for dropdown menu::: mostly going to be either shirts, jackets or coats, for now, later will add shoes, shorts, hats, etc
+    'sweatitem':['sweat', 'pullover', 'long sleeve', 'longsleeve', 'sleeve'],
+    'shirtitem' :[' shirt', 'shirt', 'Shirt', ' shirt ' 'shir', 'shit', 'vest'],
+    'jacketitem':['jacket', 'jacket ', 'Jacket'],
+    'hoodieitem':['hoodie', 'hooded', 'hoody', 'Hoodie'],
+    'sweateritem':['sweater'],
+    'jerseyitem': ['jersey'],
+    'buttonitem': ['flannel']
+    }
+condition = {
+    'new':['deadstock', 'ds', 'new', 'nwt', 'new with tags', 'with tag', 'new with tag', 'brand new'],
+    'damaged':['distressed', 'rip', 'stained', 'stain', 'tear', 'hole', 'flaw']
+    }
+age = {
+    'modern':['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022'],
+    'Y2K': ['y2k', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008','2009'],
+    '90': ['90\'s', '91', '92', '93', '94', '95', '96', '97', '98', '99']
+}
+
+def checking(counting):
+    print('checking function')
+    print(excel_total_titles[counting])
+    print(testing[counting])
+    print(grailed_category_list[counting])
+    print(grailed_key_list[counting])
+    print(grailed_condition_list[counting])
+    print(grailed_size_list[counting])
+    print(price_lists[counting])
+    print(grailed_age_list[counting])
+    print('   ')
+
+def creating_pygsheet():
+    try:
+        sheet = gc.open_by_key(sheet_title)
+        print(f"Opened spreadsheet with id:{sheet.id} and url:{sheet.url}")
+    except pygsheets.SpreadsheetNotFound as error:
+        # Can't find it and so create it                                                                                                                                                                                                                                                                                                  
+        res = gc.sheet.create(sheet_title)
+        sheet_id = res['spreadsheetId']
+        sheet = gc.open_by_key(sheet_id)
+        print(f"Created spreadsheet with id:{sheet.id} and url:{sheet.url}")
+        #this shares sheet with yourself
+        sheet.share('argelarroyo2001@gmail.com', role='writer', type='user')
+
+all_2_sources = ['Vintage', 'Preloved']
+all_3_styles = ['Casual', 'Retro', 'Y2K']
+count = 0
+# stop_words = set(stopwords.words('english'))
+new_key = list(brandss.values())
+condtion_keys = list(condition.values())
+new_size = list(sizes.values())
+numb = list(range(10, 48))
+number = list(range(50, 90))
+numba = list(range(91, 300))
+numberss = numba + numb + number
+stringed_numbers = [str(x) for x in numberss]
+word_title_list = []
+list_with_only_title = []
+list_with_only_title2 = []
+updated_list_without_duplicates1 = []
+final_result_updated_list = []
+updated_list_without_duplicates3 = []
+updated_list_without_duplicates4 = []
+word_key_list = []
+prices_with_index = []
+matches = []
+non_matches= []
+identify_price_list = []
+all_key_total = []
+identify_price_list_titles = []
+condition_values = []
+for new_keys in new_key:
+    for newer_keys in new_keys:
+        all_key_total.append(newer_keys)
+
+for value in condtion_keys:
+    for val in value:
+        condition_values.append(val)
+#function to match words with brandss value
+
+def lower(list):
+    for lis in list:
+        yup = lis.lower()
+        lower_list.append(yup)
+
+def repeating_list(listing):
+    for i in listing:
+        print(i)
+    print(len(listing))
+
+def enumeration(listing):
+    for i in range(len(listing)):
+        ii = i + 1
+        si =  ii, listing[i]
+        prices_with_index.append(si)
+
+source1_list_final = []
+tit_w_no_source1 = []
+def diff_btwn_source1(total_list):
+    titles_w_no_source1 = list(set(lower_list) - set(condition_titles))
+    for titles in titles_w_no_source1:
+        titties = titles, 'Preloved (preloved)'
+        tit_w_no_source1.append(titties)
+        title_source_11 = tit_w_no_source1 + source_for_1_tuple
+        source1_list = sorted(title_source_11)
+    for tup, source in source1_list:
+        source1_list_final.append(source)
+
+domestic_shipping = []
+interational_shipping = []
+location_list = []
+style_1 = []
+style_2 = []
+style_3 = []
+empty_list = []
+color_list = []
+title_w_no_color2 = []
+def diff_btwn_color():
+    title_w_no_color = list(set(lower_list) - set(color_title))
+    for title in title_w_no_color:
+        titties = title, ' '
+        title_w_no_color2.append(titties)
+        total_title_color1 = title_w_no_color2 + color_tuple
+        total_title_color2 = sorted(total_title_color1)
+        empty_filler = ' '
+        source2_for_2 = 'Vintage (vintage)'
+        style_for_1 = 'Sportswear (sportswear)'
+        style_for_2 = 'Y2K (y2_k)'
+        style_for_3 = 'Casual (casual)'
+        location = 'United States'
+        domestic_shipping_price = '3'
+        interational_shipping_price = '15'
+    for tup, colorr, in total_title_color2:
+        interational_shipping.append(interational_shipping_price)
+        domestic_shipping.append(domestic_shipping_price)
+        location_list.append(location)
+        source_for_2.append(source2_for_2)
+        style_1.append(style_for_1)
+        style_2.append(style_for_2)
+        style_3.append(style_for_3)
+        color_list.append(colorr)
+        empty_list.append(empty_filler)
+
+price_lists = []
+price_title_list = []
+def identify_price(titles):
+    global count
+    global missing_count
+    no_count = 0
+    missing_count = 0
+    count = 0
+    for titled in titles:
+        no_count = 0
+        titledd = titled.lower()
+        for numb in stringed_numbers:
+            if numb not in titledd:
+                no_count += 1
+                if no_count == 285:
+                    price_of_item = '\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'
+                    # no_count = 0
+                    if titled not in price_title_list:
+                        price_lists.append(price_of_item)
+                        price_title_list.append(titled)
+                        missing_count += 1
+            else:
+                price_of_item = numb
+                # no_count = 0
+                if titled not in price_title_list:
+                    price_lists.append(price_of_item)
+                    price_title_list.append(titled)
+                    count += 1
+
+depop_condition_list = []
+grailed_condition_list = []
+condition_list = []
+def condition_function(titles):
+    global no_count
+    global condition_list
+    no_count = 0
+    for titled in titles:
+            titledd = titled.lower()
+            for cond in condition.values():
+                for ind_cond in cond:
+                    if ind_cond not in titledd: 
+                        no_count += 1
+                        if no_count == 15:
+                            cat_of_item = " "
+                            depop_condition = 'Used = Excellent'
+                            grailed_condition = 'Used'
+                            if titled not in condition_list:
+                                grailed_condition_list.append(grailed_condition)
+                                depop_condition_list.append(depop_condition)
+                                condition_list.append(titled)
+                                no_count = 0
+                    else:
+                        if ind_cond in condition['new']:
+                            depop_condition = 'Brand new'
+                            source1_for_1 = 'Deadstock (deadstock)'
+                            grailed_condition = 'New/Never Worn'
+                        elif ind_cond in condition['damaged']:
+                            depop_condition = 'Used - Fair'
+                            source1_for_1 = 'Preloved (preloved)'
+                            grailed_condition = 'Very Worn'
+                        no_count = 0
+                        if titled not in condition_list:
+                            grailed_condition_list.append(grailed_condition)
+                            depop_condition_list.append(depop_condition)
+                            condition_list.append(titled)
+                            no_count = 0        
+
+poshmark_category_list = []
+ebay_category_list = []
+missing_category_list = []
+grailed_category_list = []
+category_list = []
+missing_count = 0
+#around %75 accurate
+def category_function(titles):
+    global no_count
+    global missing_count
+    no_count = 0
+    for titled in titles:
+            titledd = titled.lower()
+            for cat in category.values():
+                for ind_cat in cat:
+                    if ind_cat not in titledd: 
+                        no_count += 1
+                        if no_count == 22:
+                            cat_of_item = " "
+                            grailed_category = 'missing'
+                            ebay_category = 'missingg'
+                            if titledd not in category_list and no_count == 23:
+                                grailed_category_list.append(grailed_category)
+                                ebay_category_list.append(ebay_category)
+                                poshmark_category_list.append(poshmark_category)
+                                category_list.append(titledd)
+                                tup = titled, grailed_category
+                                missing_category_list.append(tup)
+                                no_count = 0
+                    else:
+                        if ind_cat in category['sweatitem']:
+                            grailed_category = "Sweatshirts & Hoodies"
+                            ebay_category = 'Sweatshirts and Hoodies'
+                            poshmark_category = 'Sweatshirts'
+                            category_of_item = 'Men >> Tops >> Sweatshirts (menswear, tops, sweatshirts)'                        
+                        elif ind_cat in category['hoodieitem']:
+                            grailed_category = "Sweatshirts & Hoodies"
+                            ebay_category = ''
+                            poshmark_category = 'Hoodies'
+                            category_of_item = 'Men >> Tops >> Hoodies (menswear, tops, hoodies)'
+                        elif ind_cat in category['jacketitem']:
+                            grailed_category = "Sweatshirts & Hoodies"
+                            poshmark_category = 'Jackets'
+                            ebay_category = 'Jacket'
+                            category_of_item = 'Men >> Coats and jackets >> Jackets (menswear, coats-jackets, jackets)'
+                        elif ind_cat in category['sweateritem']:
+                            grailed_category = 'Sweaters & Knitwear'
+                            ebay_category = 'Sweaters'
+                            poshmark_category = 'Sweater'
+                            category_of_item = 'Men >> Tops >> Sweaters (menswear, tops, jumpers)'
+                        elif ind_cat in category['jerseyitem']:
+                            grailed_category = 'Jerseys'
+                            ebay_category = 'Jerseys'
+                            poshmark_category = 'Jersey'
+                        elif ind_cat in category['buttonitem']:
+                            grailed_category = 'Shirts (Button Ups)'
+                            ebay_category = 'Button Shirts'
+                            poshmark_category = 'Shirts'
+                        elif ind_cat in category['shirtitem']:
+                            grailed_category = 'Short Sleeve T-Shirts'
+                            ebay_category = 'TShirt'
+                            poshmark_category = 'T-Shirts'
+                            category_of_item = 'Men >> Tops >> Shirts (menswear, tops, shirts)'
+                        no_count = 0
+                        if titledd not in category_list:
+                            grailed_category_list.append(grailed_category)
+                            ebay_category_list.append(ebay_category)
+                            category_list.append(titledd)
+                            poshmark_category_list.append(poshmark_category)
+                            no_count = 0
+        
+
+age_list = []
+grailed_age_list = []
+def age_function(titles):
+    global age_count
+    age_count = 0
+    no_count = 0
+    for titled in titles:
+        titledd = titled.lower()
+        for ages in age.values():
+            for ind_age in ages:
+                age_count += 1
+                if ind_age not in titledd:
+                    no_count += 1
+                    if no_count == 34:
+                        grailed_age = 'Modern'
+                        if titled not in age_list:
+                            grailed_age_list.append(grailed_age)
+                            age_list.append(titled)
+                            no_count = 0
+                else:
+                    if ind_age in age['90']:
+                        age_of_item = '90s (90s)'
+                        grailed_age = 'Vintage'
+                    elif ind_age in age['Y2K']:
+                        age_of_item = '00s (y2k)'
+                        grailed_age = 'Y2K'
+                    elif ind_age in age['modern']:
+                        age_of_item = 'Modern (modern)'
+                        grailed_age = 'Modern'
+                    no_count = 0
+                    if titled not in age_list:
+                        grailed_age_list.append(grailed_age)
+                        age_list.append(titled)
+                        no_count = 0
+
+
+grailed_color_list = []
+depop_color_list = []
+color_title = []
+color_tuple = []
+def color_function(titles):
+    global grailed_color
+    global fill_count 
+    global color_tupe
+    no_count = 0
+    for titled in titles:
+        titledd = titled.lower()
+        for color in colors.values():
+            for ind_color in color:
+                if ind_color not in titledd:   
+                    no_count += 1
+                    if no_count == 19:
+                        depop_color = " "
+                        grailed_color = 'Blanc'
+                        if titled not in color_title:
+                            depop_color_list.append(depop_color)
+                            grailed_color_list.append(grailed_color)
+                            color_title.append(titled)
+                            no_count = 0
+                else:
+                    no_count = 0
+                    if ind_color == 'black':
+                        depop_color = 'Black (black)'
+                        grailed_color = "Black"
+                    elif ind_color == 'blue':
+                        depop_color = 'Blue (blue)'
+                        grailed_color = "Blue"
+                    elif ind_color == 'brown':
+                        depop_color = 'Brown (brown)'
+                        grailed_color = "Brown"
+                    elif ind_color == 'burgundy':
+                        depop_color = 'Burgundy (burgundy)'
+                        grailed_color = "Burgundy"
+                    elif ind_color == 'cream':
+                        depop_color = 'Cream (cream)'
+                        grailed_color = "Cream"
+                    elif ind_color == 'gold':
+                        depop_color = 'Gold (gold)'
+                        grailed_color = "Gold"
+                    elif ind_color == 'green':
+                        depop_color = 'Green (green)'
+                        grailed_color = "Green"
+                    elif ind_color == 'grey':
+                        depop_color = 'Grey (grey)'
+                        grailed_color = "Grey"
+                    elif ind_color == 'khaki':
+                        depop_color = 'Khaki (khaki)'
+                        grailed_color = "Khaki"
+                    elif ind_color == 'navy':
+                        depop_color = 'Navy (navy)'
+                        grailed_color = "Navy"
+                    elif ind_color == 'orange':
+                        depop_color = 'Orange (orange)'
+                        grailed_color = "Orange"
+                    elif ind_color == 'pink':
+                        depop_color = 'Pink (pink)'
+                        grailed_color = 'Pink'
+                    elif ind_color == 'purple':
+                        depop_color = 'Purple (purple)'
+                        grailed_color = 'Purple'
+                    elif ind_color == 'red':
+                        depop_color = 'Red (red)'
+                        grailed_color = 'Red'
+                    elif ind_color == 'silver':
+                        depop_color = 'Silver (silver)'
+                        grailed_color = 'Silver'
+                    elif ind_color == 'tan':
+                        depop_color = 'Tan (tan)'
+                        grailed_color = 'Tan'
+                    elif ind_color == 'white':
+                        depop_color = 'White (white)'
+                        grailed_color = 'White'
+                    elif ind_color == 'yellow':
+                        depop_color = 'Yellow (yellow)'
+                        grailed_color = 'Yellow'
+                    no_count = 0
+                    if titled not in color_title:
+                        grailed_color_list.append(grailed_color)
+                        depop_color_list.append(depop_color)
+                        color_tupe = titled, depop_color
+                        color_title.append(titled)
+                        color_tuple.append(color_tupe)
+
+posh_size_list = []
+grailed_size_list = []
+size_list = []
+def size_function(titles):
+    global grailed_size
+    global grailed_size_list 
+    global color_tupe
+    no_count = 0
+    for titled in titles:
+        titledd = titled.lower()
+        for size in sizes.values():
+            for ind_size in size:
+                if ind_size not in titledd: 
+                    no_count += 1
+                    if no_count == 19:
+                        size_of_item = ""
+                        grailed_size = 'needs size'
+                        if titled not in size_list and no_count != 19:
+                            grailed_size_list.append(grailed_size)
+                            size_list.append(titled)
+                            posh_size_list.append(posh_size)
+                            no_count = 0
+                else:
+                    if ind_size in sizes['4XL']:
+                        posh_size = '4XL'
+                        grailed_size = 'US XXL / EU 58 / 5'
+                    elif ind_size in sizes['3XL']:
+                        posh_size = '3XL'
+                        grailed_size = 'US XXL / EU 58 / 5'
+                    elif ind_size in sizes['MEDIUM']:
+                        posh_size = 'M'
+                        grailed_size = 'US M / EU 48-50 / 2'
+                    elif ind_size in sizes['SMALL']:
+                        posh_size = 'S'
+                        grailed_size = 'US S / EU 44-46 / 1'
+                    elif ind_size in sizes['2XL']:
+                        posh_size = '2XL'
+                        grailed_size = 'US XXL / EU 58 / 5'
+                    elif ind_size in sizes['XL']:
+                        posh_size = 'XL'
+                        grailed_size = 'US XL / EU 56 / 4'
+                    elif ind_size in sizes['LARGE']:
+                        posh_size = 'L'
+                        grailed_size = 'US L / EU 52-54 / 3'               
+                    no_count = 0
+                    if titled not in size_list:
+                        size_list.append(titled)
+                        grailed_size_list.append(grailed_size)
+                        posh_size_list.append(posh_size)
+                        no_count = 0
+
+depop_key_list = []
+grailed_key_list = []
+overall_titles_brand = []
+def brand_function(titles):
+    global ind_count 
+    global grailed_key
+    global identify_price_list
+    global no_count
+    global count
+    count = 0
+    for titled in titles:
+        no_count = 0
+        titledd = titled.lower()
+        titled_split = titledd.split(' ')
+        for key in brandss.values():
+            for ind_key in key:
+                if ind_key not in titled_split:
+                    no_count += 1
+                    if no_count == 222:
+                        depop_key = "Vintage"
+                        grailed_key = 'Vintage'
+                        if titled not in overall_titles_brand:  
+                            grailed_key_list.append(grailed_key)
+                            depop_key_list.append(depop_key)
+                            overall_titles_brand.append(titled)   
+                            no_count = 0
+                        
+                else:
+                    if ind_key in brandss['disney items']:
+                        depop_key = "Disney (disney)"
+                        grailed_key = "Disney"
+                    elif ind_key in brandss['nfl brand']:
+                        depop_key = "NFL (nfl)"
+                        grailed_key = 'NFL'
+                    elif ind_key in brandss['nba brand']:
+                        depop_key = "NBA (nba)"
+                        grailed_key = 'NBA'
+                    elif ind_key in brandss['harley']:
+                        depop_key = "Harley Davidson (harley-davidson)"
+                        grailed_key = 'Harley Davidson'
+                    elif ind_key in brandss['chase authentics']:
+                        depop_key = "Chase Authentics (chase-authentics)"
+                        grailed_key = 'Chase Authentics'
+                    elif ind_key in brandss['mlb']:
+                        depop_key = "NBA (nba)"
+                        grailed_key = 'MLB'
+                    elif ind_key in brandss['hard rock cafeitem']:
+                        depop_key = 'Hard Rock Cafe (hard-rock-cafe)'
+                        grailed_key = 'Hard Rock Cafe'
+                    elif ind_key in brandss['reebok']:
+                        depop_key = "Reebok (reebok)"
+                        grailed_key = 'Reebok'
+                    elif ind_key in brandss['adidas']:
+                        depop_key = "Adidas (adidas)"
+                        grailed_key = 'Adidas'
+                    elif ind_key in brandss['new era']:
+                        depop_key = "New Era (new-era)"
+                        grailed_key = 'New Era'
+                    elif ind_key in brandss['jordan']:
+                        depop_key = "Jordan (jordan)"
+                        grailed_key = 'Jordan'
+                    elif ind_key in brandss['looney tunes']:
+                        depop_key = "Looney Tunes (looney-tunes)"
+                        grailed_key = 'Looney Tunes'
+                    elif ind_key in brandss['tommy hilfiger']:
+                        depop_key = "Tommy Hilfiger (tommy-hilfiger)"
+                        grailed_key = 'Tommy Hilfiger'
+                    elif ind_key in brandss['marvel']:
+                        depop_key = "Marvel (marvel)"
+                        grailed_key = 'Marvel'
+                    elif ind_key in brandss['columbia']:
+                        depop_key = "Columbia Sportswear (columbia-sportswear)"
+                        grailed_key = 'Columbia'
+                    elif ind_key in brandss['patagoniaitem']:
+                        depop_key = "Patagonia (patagonia)"
+                        grailed_key = 'Patagonia'
+                    elif ind_key in brandss['starteritem']:
+                        depop_key = "Starter (starter)"
+                        grailed_key = 'Starter'
+                    elif ind_key in brandss['champion']:
+                        depop_key = "Champion (champion)"
+                        grailed_key = 'Champion'
+                    elif ind_key in brandss['truereligion']:
+                        grailed_key = 'True Religion'
+                    elif ind_key in brandss['wweitem']:
+                        grailed_key = 'Wwe'
+                    elif ind_key in brandss['nike']:
+                        depop_key = "Nike (nike)"
+                        grailed_key = 'Nike'
+                    elif ind_key in brandss['pro player']:
+                        grailed_key = 'Pro Player'
+                    elif ind_key in brandss['liquid blue']:
+                        grailed_key = 'Liquid Blue'
+                    elif ind_key in brandss['northface']:
+                        grailed_key = 'The North Face'
+                    elif ind_key in brandss['jerzeesitem']:
+                        grailed_key = 'Jerzees'
+                    elif ind_key in brandss['themountainitem']:
+                        grailed_key = 'The Mountain'
+                    elif ind_key in brandss['JNCOitem']:
+                        grailed_key = 'JNCO'
+                    elif ind_key in brandss['nhlitem']:
+                        grailed_key = 'NHL'
+                    elif ind_key in brandss['russelitem']:
+                        grailed_key = 'Russell Athletic'
+                    elif ind_key in brandss['vintageitem']:
+                        grailed_key = 'Vintage'
+                    no_count = 0
+                    if titled not in overall_titles_brand:
+                        grailed_key_list.append(grailed_key)
+                        #depop key list for bulk lister if I can ever figure that out
+                        #but dropdown menu still having issues with me so we'll do it the old fashioned way
+                        depop_key_list.append(depop_key)
+                        overall_titles_brand.append(titled)
+                        no_count = 0
+
+final_final_list = []
+def combining_lists_for_depop():
+    global total_list
+    global category_list
+    global price_lists
+    global sizing_list
+    global overall_final_list
+    z = zip(titles_list, category_list, price_lists, brand_list, conditions_list, sizing_list, color_list, color_list, source1_list_final, source_for_2, age_list, style_1, style_2, style_3, location_list, domestic_shipping, interational_shipping)
+    for item in z:
+        final_final_list.append(item)
+
+
+#this enters every single possible thing but the size text, says its invalid for some reason, and I need some help
+#everything else works, but the size for some reason, it has to be a depop problem
+def create_google_sheet():
+    global final_final_list
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+    SERVICE_ACCOUNT_FILE = '/Users/Argel Arroyo/Desktop/Selenium_python/depop-bulk-lister.json'
+    creds = None
+    creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    # The ID and range of a sample spreadsheet.
+    spreadsheet_id = '1FHHJ6j0XdHggqJJEQ6MI4eua1H5FiJAQ'
+    service = build('sheets', 'v4', credentials=creds)
+    sheet = service.spreadsheets() 
+    range_doc = 'Template!A5:Q110'
+    request = sheet.values().append(spreadsheetId=spreadsheet_id, range=range_doc, valueInputOption='USER_ENTERED', insertDataOption='INSERT_ROWS', body={'values':final_final_list}).execute()
+
+def turning_dictionary_into_list():
+    for listin in overall_final_list:
+        print(listin.values())
+        print('yuh')
+
+################################
+#MAIN CHUNK OF CODING
+################################
+print("Start of Main Chunk of Code")
+print("     ")
+print("     ")
+print("     ")
+
+#color, brand, size, price, condition, category
+
+identify_price(titles) # ////////////////
+color_function(titles)
+brand_function(titles)
+size_function(titles)
+age_function(titles)
+category_function(titles)
+condition_function(titles)
+# combining_lists_for_depop()
+# create_google_sheet() 
+
+def find_diff(missing_list):
+    print(' ')
+    print('find diff')
+    missing_keys = list(set(excel_total_titles) - set(missing_list))
+    print(len(missing_keys))
+    print(missing_keys)
+    print(' ')
+
+def zip_check(missing_list):
+    print('  ')
+    print('zip check')
+    count = 0
+    zz = zip(excel_total_titles, missing_list)
+    for item in zz:
+        print(item)
+        count += 1
+    print(count)
+    print(len(missing_list))
+    print(count)
+    print(' ')
+
+
+
+
+# print(len(testing2))
+# print(len(grailed_condition_list))
+# print(len(price_lists))
+# print(len(grailed_size_list)) #188
+# print(len(grailed_category_list)) # 188
+# print(len(grailed_key_list)) # 188
