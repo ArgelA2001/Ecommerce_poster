@@ -1,0 +1,33 @@
+from string import ascii_uppercase
+import pandas as pd 
+from openpyxl import load_workbook
+
+
+
+excel_total_titles = []
+def extract_info_from_excel(excelpath):
+    #load spreadsheet
+    wb = load_workbook(excelpath)
+
+    #activate worksheet
+    ws = wb.active
+
+    #grab column
+    #will print out as tuple
+    title_column = ws['G']
+
+    #for loop
+    #iterates through each cell in the column with titles to extract title, then filters out all the None, then from there
+    for cell in title_column:
+        # print(f'{cell.value}\n')
+        if cell.value != None:
+            excel_total_titles.append(cell.value)
+
+#one thing you have to change 
+pic_file = ""
+path = "D:\\Selenium_python2\\" + pic_file + ".xlsx"
+
+extract_info_from_excel(path)
+
+# print('excel_total_titles from extract_info_from_excel page')
+# print(excel_total_titles)
