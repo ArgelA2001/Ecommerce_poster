@@ -1,0 +1,29 @@
+import os
+from os import listdir
+from PIL import Image
+import numpy as np
+import sys
+import os
+import csv
+import xlsxwriter
+import openpyxl
+from openpyxl import load_workbook
+
+
+image_list = []
+count = 0
+#2nd thing you have to change
+pic_file = ""
+folder_dirr = r"D:\\Selenium_python2\\" + pic_file
+for images in os.listdir(folder_dirr):
+ 
+    # check if the image ends with png
+    if (images.endswith(".JPG")):
+        image_list.append(images)
+
+    else: 
+        print("oops")
+    count += 1
+
+image_list_tuples = []
+count = 0
