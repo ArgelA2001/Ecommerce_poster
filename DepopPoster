@@ -1,0 +1,364 @@
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
+from text_parser import grailed_age_list, grailed_key_list, poshmark_category_list, depop_condition_list, posh_size_list, grailed_color_list, price_lists, general_description
+from Testing import image_list
+from Extract_info_from_excel import excel_total_titles
+chrome_options = Options()
+chrome_options.add_experimental_option("detach", True)
+driver = webdriver.Chrome("D:\\Selenium_python2\\chromedriver.exe", chrome_options=chrome_options)
+driver.get("https://www.depop.com/products/create/")
+time.sleep(2)
+
+count = 39
+pstart = count * 4
+
+def start_up():
+    driver.find_element('xpath', '//*[@id="__next"]/div/div[3]/div[2]/button[2]').click()
+    time.sleep(2)
+    driver.find_element('xpath', '//*[@id="mainNavigation"]/li[4]/a').click()
+    time.sleep(2)
+    username = WebDriverWait(driver, 10).until(EC.presence_of_element_located(('xpath', '//*[@id="username"]')))
+    username.send_keys('argelarroyo2001@gmail.com')
+    time.sleep(2)
+    driver.find_element('xpath', '//*[@id="password"]').send_keys('Pineappleguy305') 
+    driver.find_element('xpath', '//*[@id="main"]/div[3]/form/button').click()
+    time.sleep(5)
+
+
+
+def adding_pics():
+    global pstart
+    current_folder = 'unknown atm'
+    current_images = 'pics'
+    time.sleep(1)
+    pictures = WebDriverWait(driver, 10).until(EC.presence_of_element_located(('xpath', '//*[@id="imageInput"]')))
+    pictures.send_keys("D:\\Selenium_python2\\" + current_images +"\\" + str(image_list[pstart]))
+    pstart += 1
+    time.sleep(1)
+    driver.find_element('xpath', '//*[@id="imageInput"]').send_keys("D:\\Selenium_python2\\" + current_images +"\\" + str(image_list[pstart]))
+    pstart += 1
+    time.sleep(1)
+    driver.find_element('xpath', '//*[@id="imageInput"]').send_keys("D:\\Selenium_python2\\" + current_images +"\\" + str(image_list[pstart]))
+    pstart += 1
+    time.sleep(1)
+    driver.find_element('xpath', '//*[@id="imageInput"]').send_keys("D:\\Selenium_python2\\" + current_images +"\\" + str(image_list[pstart]))
+    pstart += 1
+    time.sleep(2)
+
+def pic_adjustment():
+    time.sleep(5)
+    picture = driver.find_elements('xpath', "//*[contains(@class, 'ImageInputstyles__Crop-sc-__sc-2l692w-5 efijCR')]")
+    for pic in picture:
+        pic.click()
+        #save button
+        driver.find_element('xpath', "/html/body/div[2]/div/aside/div[2]/button").click()
+        time.sleep(1)
+    time.sleep(4)
+    
+category_error = []
+def picking_category_item(xxx):
+    global size_count
+    print(xxx)
+    driver.find_element('xpath', '//*[@id="main"]/form/div[3]/div[1]/div/div/div[1]').click()
+    main_category = driver.find_elements('xpath' ,"//*[contains(@class, 'sc-fWjsSh kNBaWI')]") #sc-fmrZth oYQYY
+    time.sleep(1) 
+    if xxx == 'Coat' or xxx == 'Jacket' or xxx == 'Vest':
+        #picking coats and jackets
+        main_category[2].click
+        print('Coat Jacket or Vest')
+        diff_coats = driver.find_elements('xpath', "//*[contains(@class, 'sc-fHsOPI eOfizZ')]")
+        try:
+            if xxx == "Coat":
+                diff_coats[0].click()
+            elif xxx == "Jacket":
+                diff_coats[1].click()
+            elif xxx == "Vest":
+                diff_coats[2].click()
+        except Exception as e:
+            print('coats error')
+            print(e)
+            there_is_error = 1
+
+    elif  xxx == "T-Shirts" or xxx == "Hoodies" or xxx == 'Sweatshirts' or xxx == "Sweaters" or xxx == "Shirts":
+        size_count = 3
+        print('Hoodies Sweatshirt or T-shirts')
+        print(xxx)
+        #choosing tops in main category
+        main_category[0].click #this is giving coats and jacket
+        # driver.find_element('xpath' ,'//*[@id="react-select-2-option-0-0"]/div').click()
+        diff_tops = driver.find_elements('xpath', "//*[contains(@class, 'sc-fmrZth oYQYY')]")
+        try:
+            if xxx == "T-Shirts":
+                diff_tops[0].click()
+            elif xxx == "Hoodies":
+                diff_tops[1].click()
+            elif xxx == "Sweatshirts":
+                diff_tops[2].click()
+            elif xxx == "Sweaters":
+                diff_tops[3].click()
+            elif xxx == "Shirts":
+                diff_tops[5].click()
+        except Exception as e:
+            print('tops error')
+            print(e)
+            there_is_error = 1
+
+    elif xxx == 'Pants' or xxx == 'Sweats' or xxx == 'Jeans':
+        size_count = 2
+        print('Pants Sweats or Jeans')
+        time.sleep(1)
+        driver.find_element('xpath', '//*[@id="react-select-2-option-0-1"]/div/div/div/p').click()
+        
+    
+size_error = []
+def pick_size(size):
+    global there_is_error
+    global size_drop_down
+    global size_count
+    try:
+        open_size = driver.find_elements('id', "createProductSizes__sizeRow0__size__select")
+        open_size[1].click()
+        time.sleep(2)
+        pick_size = driver.find_elements('xpath', "//*[contains(@class, 'sc-fWjsSh kNBaWI')]")
+    
+        if size_count == "XS":
+            pick_size[1].click()
+        elif size_count == "S":
+            pick_size[2].click()
+        elif size_count == "M":
+            pick_size[3].click()
+        elif size_count == "L":
+            pick_size[4].click()
+        elif size_count == "XL":
+            pick_size[5].click()
+        elif size_count == "XXL":
+            pick_size[6].click()
+        elif size_count == "3XL":
+            pick_size[7].click()
+        there_is_error = 0
+
+    except:
+        print('error in size for ' + str(count))
+        there_is_error = 1
+        size_error.append(count)
+            
+def pick_occasions():
+    #casual, party, going out
+    try:
+        driver.find_element('xpath', '//*[@id="main"]/form/div[3]/div[3]/div/div/div/div[2]/div/div').click()
+        driver.find_element('xpath', '//*[@id="react-select-11-option-0"]/div/div/div/p').click()
+        driver.find_element('xpath', '//*[@id="main"]/form/div[3]/div[3]/div/div/div/div[2]/div/div').click()
+        driver.find_element('xpath', '//*[@id="react-select-11-option-3"]/div/div/div/p').click()
+        driver.find_element('xpath', '//*[@id="main"]/form/div[3]/div[3]/div/div/div/div[2]/div/div').click()
+        driver.find_element('xpath', '//*[@id="react-select-11-option-5"]/div/div/div/p').click()
+    except:
+        print('error in occasion')
+
+brand_error = []
+def picking_brand(dabrand):
+    global count
+    try:
+        driver.find_element('xpath', '//*[@id="main"]/form/div[3]/div[2]/div/div/div[1]').click()
+        driver.find_element('xpath', '//*[@id="listingBrands__select"]').send_keys(dabrand)
+        brand_drop_down = driver.find_element('xpath', '//*[@id="main"]/form/div[3]/div[2]/div/div[2]/div/div')
+        options = brand_drop_down.find_elements('tag name', 'p')
+        for option in options:
+            if option.text == dabrand:
+                print('yuh')
+                option.click()
+    except:
+        brand_error.append(count)
+
+color_error = []
+def adding_color(color):
+    #need to figure out how to use class name and stuff
+    try:
+        driver.find_element('xpath', '//*[@id="main"]/form/div[4]/div/div[1]/div').click()
+        color_drop_down = driver.find_element('xpath', '//*[@id="main"]/form/div[4]/div/div[1]/div/div[2]/div')
+        options = color_drop_down.find_elements('tag name', 'p')
+        for option in options:
+            if option.text == color:
+                option.click()
+    except:
+        color_error.append(count)
+              
+def picking_source():
+    try:
+        source = WebDriverWait(driver, 20).until(EC.presence_of_element_located(('xpath', '//*[@id="main"]/form/div[4]/div/div[2]/div[1]/div/div/div[1]')))
+        source.click()
+        # driver.find_element('xpath', '//*[@id="main"]/form/div[4]/div/div[2]/div[1]/div/div/div[1]').click()
+        driver.find_element('xpath', '//*[@id="react-select-6-option-1"]/div/div/div/p').click()
+        driver.find_element('xpath', '//*[@id="main"]/form/div[4]/div/div[2]/div[1]/div/div/div[1]').click()
+        driver.find_element('xpath', '//*[@id="react-select-6-option-0"]/div/div/div/p').click()
+    except:
+        print('error in source')
+
+condition_error = []
+def selecting_condition(cond):
+    print(cond)
+    open_condition = driver.find_elements('xpath', "//*[contains(@class, 'select__value-container css-9sowuo')]")
+    open_condition[2].click()
+    time.sleep(2)
+    try:
+        diff_conditions = driver.find_elements('xpath', "//*[contains(@class, 'sc-jqUVSM igTyxL')]")
+        if cond == 'Used = Excellent':
+            diff_conditions[2].click()
+        elif cond == 'Brand new':
+            diff_conditions[0].click()
+        elif cond == 'Used - Fair':
+            diff_conditions[4].click()
+    except:
+        print('error in condition', + count)
+
+age_error = []
+def identify_age(age):
+    try:
+        print(age)
+        driver.find_element('xpath', '//*[@id="main"]/form/div[4]/div/div[2]/div[2]/div/div/div[1]').click()
+        if age == 'Vintage':
+            driver.find_element('xpath', '//*[@id="react-select-7-option-2"]/div/div/div/p').click()
+        elif age == 'Y2K':
+            driver.find_element('xpath', '//*[@id="react-select-7-option-1"]/div/div/div/p').click()
+        elif age == 'Modern':
+            driver.find_element('xpath', '//*[@id="react-select-7-option-0"]/div/div/div/p').click()
+    except:
+        age_error.append(count)
+    
+def pick_style():
+    try:
+        driver.find_element('xpath', '//*[@id="main"]/form/div[4]/div/div[2]/div[3]/div/div').click()
+        driver.find_element('xpath', '//*[@id="react-select-8-option-20"]/div/div/div/p').click()
+        driver.find_element('xpath', '//*[@id="main"]/form/div[4]/div/div[2]/div[3]/div/div').click()
+        driver.find_element('xpath', '//*[@id="react-select-8-option-1"]/div/div/div/p').click()
+        driver.find_element('xpath', '//*[@id="main"]/form/div[4]/div/div[2]/div[3]/div/div').click()
+        driver.find_element('xpath', '//*[@id="main"]/form/div[4]/div/div[2]/div[3]/div/div').click()
+    except:
+        print('error in style')
+
+def location():
+    try:
+        #country
+        driver.find_element('xpath', '//*[@id="main"]/form/div[5]/div/div/div[1]').click()
+        driver.find_element('xpath', '//*[@id="react-select-9-option-225"]/div/div/div/p').click()
+        time.sleep(1)
+        #city
+        driver.find_element('xpath', '//*[@id="main"]/form/div[6]/div/div/div[1]')
+        driver.find_element('xpath', '//*[@id="react-select-21-option-112"]/div/div/div/p').click()
+    except:
+        print('error in location')
+#need to make material category
+
+def pick_shipping():
+    driver.find_element('xpath', '//*[@id="national_shipping__manual__input"]').send_keys(Keys.BACKSPACE)
+    driver.find_element('xpath', '//*[@id="national_shipping__manual__input"]').send_keys(Keys.BACKSPACE)
+    driver.find_element('xpath', '//*[@id="national_shipping__manual__input"]').send_keys(Keys.BACKSPACE)
+    driver.find_element('xpath', '//*[@id="national_shipping__manual__input"]').send_keys(Keys.BACKSPACE)
+    driver.find_element('xpath', '//*[@id="national_shipping__manual__input"]').send_keys('3')
+
+price_error = []
+def choose_price(daprice):
+    try:
+        driver.find_element('xpath', '//*[@id="price__input"]').click()
+        driver.find_element('xpath', '//*[@id="price__input"]').send_keys(Keys.BACKSPACE)
+        driver.find_element('xpath', '//*[@id="price__input"]').send_keys(Keys.BACKSPACE)
+        driver.find_element('xpath', '//*[@id="price__input"]').send_keys(Keys.BACKSPACE)
+        driver.find_element('xpath', '//*[@id="price__input"]').send_keys(Keys.BACKSPACE)
+        driver.find_element('xpath', '//*[@id="price__input"]').send_keys(daprice)
+    except:
+        price_error.append(count)
+
+drafted_list = []
+def post_or_draft():
+    global there_is_error
+    #scrolls to bottom of page
+    #now this didnt work correctly too, I wonder why
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    #post and start next
+    #fix this   
+    #post and add another
+    post_add_another = driver.find_elements('xpath' ,"//*[contains(@class, 'sc-eGAhfa dgGGoK')]")
+    post_another = post_add_another[1]
+    post_another.click()
+    if there_is_error == 0:
+        print('post')
+        driver.find_element('xpath' ,"//*[contains(@class, 'sc-gFGZVQ igTtHW styles__PostButton-sc-__sc-1do3g2l-3 kYfyHG')]").click()
+    elif there_is_error == 1:
+        print('draft') 
+        time.sleep(3)
+        driver.find_element('xpath' ,"//*[contains(@class, 'sc-gFGZVQ ewexUW styles__OutlineButtonRequest-sc-__sc-1do3g2l-2 kHepPy')]").click()
+        time.sleep(4)
+        #list next item
+        list_next = WebDriverWait(driver, 10).until(EC.presence_of_element_located(('xpath' ,'//*[@id="__next"]/div/div/div/div[1]/div[2]/a')))
+        list_next.click()
+        time.sleep(2)
+    there_is_error = 0
+    
+def checking_all_match():
+    if len(excel_total_titles) == len(poshmark_category_list) and len(grailed_color_list) and len(grailed_key_list) and len(depop_condition_list) and len(posh_size_list) and len(price_lists):
+        print('This is all good')
+        print(len(excel_total_titles))
+        print('this the max count')
+
+    else:
+        print('Fix this')
+        print('grailed_category_list ' + str(len(poshmark_category_list)))
+        print('grailed_key_list ' + str(len(grailed_key_list)))
+        print('grailed_condition_list ' + str(len(depop_condition_list)))
+        print('grailed_size_list ' + str(len(posh_size_list)))
+        print('price_lists ' + str(len(price_lists)))
+        print('excel total titles ' + str(len(excel_total_titles)))
+        print('grailed age list ' + str(len(grailed_age_list)))
+        print('grailed color list ' + str(len(grailed_color_list)))
+
+def add_description(title):
+    tags = '#vintage #realvintage #shirt #thrifted #thrift'
+    depop_description = title + '\n\n\n\n' + general_description + '\n\n\n' + tags 
+    driver.find_element('xpath', '//*[@id="description"]').send_keys(depop_description) 
+    
+adjusted_excel_total_titles = excel_total_titles[count:]
+def depop_poster():
+    global count 
+    print('Starting Depop Poster')
+    start_up()
+    time.sleep(13)
+
+    for title in adjusted_excel_total_titles:
+        print(title) 
+        time.sleep(20)
+        print(count)
+
+        #zoom out
+        # driver.execute_script("document.body.style.zoom='90%'")
+    
+        picking_source() 
+        pick_occasions() 
+        pick_style() 
+        adding_pics() 
+        adding_color(grailed_color_list[count])    
+        selecting_condition(depop_condition_list[count])
+        # identify_age(grailed_age_list[count])
+        picking_brand(grailed_key_list[count])
+        pick_shipping() 
+        choose_price(price_lists[count])
+        location()
+        picking_category_item(poshmark_category_list[count])
+        pick_size(posh_size_list[count]) 
+        pic_adjustment()
+        add_description(title)
+        print('finished')
+
+        time.sleep(20)
+        post_or_draft()
+        
+        count += 1
+        print(count)
+        time.sleep(10)
+
+checking_all_match()
+depop_poster()
