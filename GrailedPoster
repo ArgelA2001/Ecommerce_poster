@@ -1,0 +1,269 @@
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
+from text_parser import grailed_age_list, grailed_key_list, grailed_category_list, grailed_condition_list, grailed_size_list, grailed_color_list, price_lists, category_list, general_description
+from Testing import image_list
+from Extract_info_from_excel import excel_total_titles
+#this import above gives me access to info from text_parser
+#muse use and identify where imports are needed
+
+# from text_parser.py import category_list
+#figure out how to import functions from other files
+
+driver = webdriver.Chrome("D:\\Selenium_python2\\chromedriver.exe")
+driver.get("https://www.grailed.com/sell")
+time.sleep(2)
+
+
+#got to make a catgory if else like I did with the shirts, for category in terms of clohtes,
+# can work on
+item_tags = '#Vintage #old #90\'s #used #thrifted #wornbyplayboicarti #sundayservice #grailed #depop #fashion'
+count = 4
+
+def sub_category(item):
+    sub_category_option = item
+    sub_category_lists = driver.find_elements('xpath', ".//*[@class='CustomDropDown-module__dropDownItems___7n7Mi']/span")
+    i = 0
+    for x in sub_category_lists:
+        if x.text == sub_category_option:
+            driver.find_element('xpath', ".//*[@class='CustomDropDown-module__dropDownItems___7n7Mi']/span[" + str(i + 1) + "]").click()
+            break
+        i += 1 
+
+def designer_field(designer):
+    option_to_select = designer  # change the option you want to select
+    designer_txt_field = driver.find_element('xpath', '//*[@id="designer-autocomplete"]')
+    designer_txt_field.click()
+    designer_txt_field.send_keys(designer)  # you have to enter some character to search and select the value of the string 'option_to_select'
+    time.sleep(1)
+    option_list = driver.find_elements('css selector', ".Designer-module__autocomplete___fCmzc li")
+    time.sleep(1)
+
+    i = 0
+    for x in option_list:
+        if x.text == option_to_select:
+            driver.find_element('xpath', ".//*[@class='Designer-module__autocomplete___fCmzc']/li[" + str(i + 1) + "]").click()
+            break
+        i += 1
+
+def size(clothes_size):
+    global sizetext
+    select = Select(driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[1]/div/div[2]/select'))
+    select.select_by_visible_text(clothes_size)
+
+def condition(cond):
+    select = Select(driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[4]/select'))
+    if cond == 'Deadstock (deadstock)':
+        item_condition = 'New/Never Worn'
+    elif cond == 'Used - Fair (used_fair)':
+        item_condition = 'Very Worn'
+    else:
+        item_condition = 'Used'
+    select.select_by_visible_text(item_condition)
+
+def shipping_price():
+    driver.find_element('xpath', '//*[@id="MyOwnShippingOptionWrapper"]').send_keys()
+
+def item_name(name):
+    driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[2]/input').send_keys(name)
+
+def item_color(color):
+    driver.find_element('xpath', '//*[@id="color-autocomplete"]').send_keys(color)
+
+def add_description(desc):
+    driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[5]/textarea').send_keys(desc)
+
+def adding_tags(tags):
+    driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[7]/div[2]/ul/li/input').send_keys(tags)
+
+def add_price(price):
+    driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[8]/div[2]/div[1]/div[1]/label/input').send_keys(price)
+
+def ship_switch():
+    driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[9]/div[3]/div[1]/button[2]/span').click()
+
+def smart_price_activation():
+    driver.find_element('xpath','//*[@id="SellForm"]/div/div[2]/form/div[8]/div[2]/div[1]/div[2]/label/span[2]').click()
+
+pstart = count * 4 
+def add_4_pics():
+    global pstart
+    current_images = 'pics'
+    pcount = 0
+    while pcount <=2:
+        driver.find_element('xpath', '//*[@id="photo_input_0"]').send_keys("D:\\Selenium_python2\\" + current_images +"\\" + str(image_list[pstart]))
+        pcount += 1
+        pstart += 1
+        print('pstart', pstart)
+    else:
+        driver.find_element('xpath', '//*[@id="photo_input_0"]').send_keys("D:\\Selenium_python2\\" + current_images +"\\" + str(image_list[pstart]))
+        pcount += 1
+        pstart+= 1
+        print('pstart', pstart)
+
+    time.sleep(30)
+    driver.find_element('xpath', '//*[@id="photos"]/div[2]/div/div[1]/div/label/div/button').click()
+    
+    driver.find_element('xpath', '//*[@id="photos"]/div[2]/div/div[1]/div/label/div/button').click()
+   
+    driver.find_element('xpath', '//*[@id="photos"]/div[2]/div/div[1]/div/label/div/button').click()
+  
+    driver.find_element('xpath', '//*[@id="photos"]/div[2]/div/div[1]/div/label/div/button').click()
+   
+    driver.find_element('xpath', '//*[@id="photos"]/div[2]/div/div[1]/div/label/div/button').click()
+   
+    driver.find_element('xpath', '//*[@id="photos"]/div[2]/div/div[1]/div/label/div/button').click()
+            
+def publish_button():
+    driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[11]/div/button[2]').click()
+
+def next_post():
+    driver.find_element('xpath', '//*[@id="globalHeaderWrapper"]/div/div[2]/div[1]/a/button/p').click()
+    time.sleep(2)
+    # driver.find_element('xpath' '//*[@id="__next"]/div/main/div/div[1]/div/div/div[2]/div[1]/a').click()
+    driver.find_element('xpath', "//*[contains(@class, 'Button_button__3-u4P Button_small__1-Wax Button_primary__24KWs NewListingButton_button__2fZUE')]").click()
+
+
+
+def checking(counting):
+    print('checking function')
+    print(excel_total_titles[counting])
+    print(grailed_category_list[counting])
+    print(grailed_key_list[counting])
+    print(grailed_condition_list[counting])
+    print(grailed_size_list[counting])
+    print(price_lists[counting])
+    print(grailed_age_list[counting])
+    print('   ')
+
+def checking_all_match():
+    if len(excel_total_titles) == len(grailed_category_list) and len(grailed_key_list) and len(grailed_condition_list) and len(grailed_size_list) and len(price_lists):
+        print('This is all good')
+    else:
+        print('Fix this')
+        print('grailed_category_list ' + str(len(grailed_category_list)))
+        print('grailed_key_list ' + str(len(grailed_key_list)))
+        print('grailed_condition_list ' + str(len(grailed_condition_list)))
+        print('grailed_size_list ' + str(len(grailed_size_list)))
+        print('price_lists ' + str(len(price_lists)))
+
+grailed_overall_list = []
+def combining_lists_for_grailed():
+    global excel_total_titles
+    global grailed_category_list
+    global grailed_age_list
+    global grailed_key_list
+    global grailed_size_list
+    global grailed_condition_list
+    global grailed_color_list
+    global price_lists
+    z = zip(excel_total_titles, grailed_category_list, grailed_key_list, grailed_size_list, 
+            grailed_condition_list, price_lists, grailed_color_list)
+    for item in z:
+        grailed_overall_list.append(item)
+        # print(item)
+
+excel_titles = excel_total_titles[count:] #can add a splice if need to adjust items
+
+list_to_come_back_to = []
+def grailed_poster():
+    global count
+    
+    print('Starting Grailed Poster')
+    # for title in excel_titles:
+    checking_all_match()
+    driver.find_element('xpath', '//*[@id="app"]/div[7]/div/div/div/div[2]/div/div/p[2]/a').click()
+    time.sleep(2)
+    driver.find_element('xpath', '//*[@id="app"]/div[7]/div/div/div/div[2]/div/div/button[4]').click()
+    google_email = driver.find_element('xpath', '//*[@id="email"]')
+    google_email.send_keys("argelarroyo2001@gmail.com")
+    driver.find_element('xpath', '//*[@id="password"]').send_keys('who knows')
+    time.sleep(1)
+    driver.find_element('xpath', '//*[@id="app"]/div[7]/div/div/div/div[2]/div/div/form/button').click()
+
+    title = WebDriverWait(driver, 30).until(EC.presence_of_element_located(('css selector', ".SellFormHeader-Title")))
+    driver.execute_script("arguments[0].scrollIntoView(true)",title)
+    for titlesss in excel_titles:
+        time.sleep(4)
+        driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[1]/div/div[1]/div[1]/div/input').click()
+        time.sleep(2)
+        # #Start of entering clothing details
+        # #picking type of clothing, men or woman
+        driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[1]/div/div[1]/div[1]/div/div/span[1]').click()
+        time.sleep(1)
+        # #selects the main category
+        # #so far being Mens Tops
+        driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[1]/div/div[1]/div[1]/div/div/span[2]').click()
+        time.sleep(1)
+
+        # # Sub-category field
+        #category
+        sub_category(grailed_category_list[count])
+
+        # # Item Name
+        item_name(excel_total_titles[count])
+
+        # # Designer field
+        #brand
+        designer_field(grailed_key_list[count])
+
+        # # # Size field
+        if grailed_category_list[count] == "missing":
+            list_to_come_back_to.append(count)
+        else:
+            size(grailed_size_list[count])
+
+        # # Item Color
+        item_color(grailed_color_list[count])
+
+        # #item condition
+        condition(grailed_condition_list[count])
+
+        # #Item description
+        #     #doesnt need info
+        add_description(general_description)
+
+        # #adding tag
+        #     #doesnt need info
+        adding_tags(item_tags)
+
+        # # Adding Price
+        add_price(price_lists[count])
+
+        shipping = driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[9]/div[4]/p[1]')
+        driver.execute_script("arguments[0].scrollIntoView(true)",shipping)
+
+        # #turning off smart price
+        # #doesnt need info
+        smart_price_activation()
+        time.sleep(1)
+
+        # # Switch to my own shipping
+        #     #doesnt need info
+        ship_switch()
+        time.sleep(1)
+
+        #clicking the shipping
+        driver.find_element('xpath', '//*[@id="MyOwnShippingWrappermyOwnShipping"]').click()
+
+        time.sleep(1)
+
+        add_4_pics()
+
+        # publish button
+        if grailed_category_list[count] == 'missing' or price_lists[count] == ' ':
+            driver.find_element('xpath', '//*[@id="SellForm"]/div/div[2]/form/div[11]/div/button[1]').click()
+        else:
+            publish_button()
+        time.sleep(8)
+
+        #go to next post
+        next_post()
+        print('finished ' + str(count))
+        count += 1
+        print('start ' + str(count))
+
+grailed_poster() 
